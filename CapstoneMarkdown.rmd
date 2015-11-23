@@ -5,6 +5,8 @@ date: "November 23, 2015"
 output: html_document
 ---
 
+~ $ cd pjswede.github.io
+
 ```{r}
 library(caret)
 library(ggplot2)
