@@ -48,9 +48,64 @@ SummaryTable_VTT$Revenue <- VTT_Revenue$Revenue
 SummaryTable_VTT$Traffic <- VTT_Traffic$Traffic
 SummaryTable_VTT$SkuCount <- VTT_SkuCount$SkuCount
 
+head(SummaryTable_VTT)
+str(SummaryTable_VTT)
+
 ##Create Visuals##
 #Conversion Boxplot
 qplot(x = as.factor(Year), y = Conversion, data = SummaryTable_VTT, xlab = "Year",
             geom = 'boxplot') +
        coord_cartesian(ylim = c(.01, .0325))
+
+# Conversion Line Graphs
+ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
+       geom_point() +
+       geom_smooth(method = 'lm') +
+       coord_cartesian(xlim = c(100, 200))
+
+ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
+       facet_wrap(~Year) +
+       geom_point() +
+       geom_smooth(method = 'lm') +
+       coord_cartesian(xlim = c(100,200))
+
+# Conversion Vs. Traffic Line Graphs
+ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
+       geom_point() +
+       geom_smooth(method = 'lm') +
+       coord_cartesian()
+
+ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
+       facet_wrap(~Year) +
+       geom_point() +
+       geom_smooth(method = 'lm') +
+       coord_cartesian()
+
+# Traffic Line Graphs
+ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
+       geom_point() +
+       geom_smooth(method = 'lm') +
+       coord_cartesian()
+
+ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
+       facet_wrap(~Year) +
+       geom_point() +
+       geom_smooth(method = 'lm') +
+       coord_cartesian()
+
+# Seasonality Trend
+ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
+       geom_line() +
+       coord_cartesian()
+
+ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
+       facet_wrap(~Year) +
+       geom_line() +
+       coord_cartesian()
+
+# Conversion Seasonality
+ggplot(aes(x = Week_Index, y = Conversion), data = SummaryTable_VTT) +
+       facet_wrap(~Year) +
+       geom_line() +
+       coord_cartesian()
 ```
