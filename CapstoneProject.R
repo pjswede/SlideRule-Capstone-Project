@@ -48,13 +48,13 @@ qplot(x = as.factor(Year), y = Conversion, data = SummaryTable_VTT, xlab = "Year
 ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
        geom_point() +
        geom_smooth(method = 'lm') +
-       coord_cartesian(xlim = c(100, 200))
+       coord_cartesian(xlim = c(100, 200), ylim = c(10000, 75000))
 
 ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
        facet_wrap(~Year) +
        geom_point() +
        geom_smooth(method = 'lm') +
-       coord_cartesian(xlim = c(100,200))
+       coord_cartesian(xlim = c(100,200), ylim = c(20000, 70000))
 
 # Conversion Vs. Traffic Line Graphs
 ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
@@ -63,7 +63,7 @@ ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
        coord_cartesian()
 
 ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
+       facet_grid(~Year) +
        geom_point() +
        geom_smooth(method = 'lm') +
        coord_cartesian()
@@ -75,7 +75,7 @@ ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian()
 
 ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
+       facet_grid(Year~.) +
        geom_point() +
        geom_smooth(method = 'lm') +
        coord_cartesian()
@@ -86,13 +86,18 @@ ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian()
 
 ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
-       geom_line() +
+       facet_grid(Year~.) +
+       geom_line(aes(color = Year)) +
        coord_cartesian()
 
 # Conversion Seasonality
-ggplot(aes(x = Week_Index, y = Conversion), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
+ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VTT) +
+       facet_grid(~Year) +
+       geom_line() +
+       coord_cartesian()
+
+ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VTT) +
+       facet_grid(Year~.) +
        geom_line() +
        coord_cartesian()
 
@@ -117,5 +122,9 @@ SST <- sum((VTT_Test2$Revenue - mean(SummaryTable_VTT$Revenue))^2)
 
 #############################################################################
 ## read and write stuff
-TestResult <- gather(Test, "Date", "Quantity", 6:112)
-write.table(TestResult, file = "H:/852_2012-14.csv", sep = ",", col.name = NA)
+#TestResult <- gather(Test, "Date", "Quantity", 6:112)
+#write.table(TestResult, file = "H:/852_2012-14.csv", sep = ",", col.name = NA)
+
+# Convert columns from Factor to numeric
+#colsToConvert <- c(6:ncol(Table8522))
+#TableToConvert[,colsToConvert] <- as.numeric(as.character(unlist(TableToConvert[,colsToConvert])))
