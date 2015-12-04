@@ -1,111 +1,294 @@
 ---
-title: "Capstone Project"
+title: "Ecommerce Revenue Prediction Model"
 author: "Justin Lovern"
 date: "November 23, 2015"
 output: html_document
 ---
 
-~ $ cd pjswede.github.io
+##**Introduction**
 
-```{r}
+  The purpose of this project is to build a model to predict revenue for an ecommerce web site. We will consider several variables while building the model and select the best ones, aiming for something that is both adequately predictive and simple. Once we get the data into an analyzable format, we will split it into a training set and a test set to protect against over-fitting. A rough outline follows:
+  
+1. Load in r libraries necessary to perform the analysis
+2. Bring the data into r and consolidate it into one table after wrangling it
+3. Explore the data with visuals using ggplot2
+4. Build a model and test it
+
+Let's get started...
+
+## Load libraries
+```{r comment=""}
 library(caret)
 library(ggplot2)
+```
 
-## Load in the data
+## Load in the data and assign to data frames
+The first four data sources came from Google Analytics and were exported to Excel, then saved as a .csv  
+The SkuCount data was retrieved from my company's data warehouse, formatted, and saved as a .csv
+```{r comment=""}
 VTT_Bouncerate_Percentexit <- read.csv("VTT_BouncerateVsPercentexit.csv")
 VTT_ConversionAOV <- read.csv("VTT_ConversionVsAOV.csv")
 VTT_Revenue <- read.csv("VTT_Revenue.csv")
 VTT_Traffic <- read.csv("VTT_Traffic.csv")
 VTT_SkuCount <- read.csv("SkuCountbyWk.csv")
+```
 
-## Change the headers for the bounceRate vs percentExit table and convert everything to numeric
+#### The headers are not the best and we should change the periods to underscores:
+```{r echo=FALSE, comment=""}
+colnames(VTT_Bouncerate_Percentexit)
+colnames(VTT_ConversionAOV)
+colnames(VTT_Revenue)
+colnames(VTT_Traffic)
+colnames(VTT_SkuCount)
+```  
+
+## Change the headers for these tables and convert necessary variables to numeric  
+
+
+#### Change the headers for the bounceRate_percentExit table and convert Bounce Rate and Percent Exit to numeric
+```{r comment=""}
 names(VTT_Bouncerate_Percentexit) <- c("Year", "Week_Index", "Bounce_Rate", "Percent_Exit")
 VTT_Bouncerate_Percentexit$Bounce_Rate <- as.numeric(sub("%", "", VTT_Bouncerate_Percentexit$Bounce_Rate))/100
 VTT_Bouncerate_Percentexit$Percent_Exit <- as.numeric(sub("%", "", VTT_Bouncerate_Percentexit$Percent_Exit))/100
+```  
 
-## Change the headers for the conversion vs aov table and convert everything to numeric
+#### Change the headers for the ConversionAOV table and convert Conversion and AOV to numeric
+```{r comment=""}
 names(VTT_ConversionAOV) <- c("Year", "Week_Index", "Conversion", "AOV")
 VTT_ConversionAOV$Conversion <- as.numeric(sub("%", "", VTT_ConversionAOV$Conversion))/100
 VTT_ConversionAOV$AOV <- as.numeric(sub("\\$", "", VTT_ConversionAOV$AOV))
+```  
 
-## Change the headers for the revenue table and convert Revenue column to numeric
+#### Change the headers for the revenue table and convert Revenue column to numeric
+```{r comment=""}
 names(VTT_Revenue) <- c("Year", "Week_Index", "Revenue")
 VTT_Revenue$Revenue <- sub("\\$", "", VTT_Revenue$Revenue)
 VTT_Revenue$Revenue <- as.numeric(sub(",", "", VTT_Revenue$Revenue))
+```  
 
-## Change the headers for the traffic table and convert Traffic column to numeric
+#### Change the headers for the traffic table and convert Traffic column to numeric
+```{r comment=""}
 names(VTT_Traffic) <- c("Year", "Week_Index", "Traffic")
 VTT_Traffic$Traffic <- as.numeric(sub(",", "", VTT_Traffic$Traffic))
+```  
 
-##Change the headers for the SkuCount table
+#### Change the headers for the SkuCount table
+```{r comment=""}
 names(VTT_SkuCount) <- c("Year", "Week_Index", "SkuCount")
+```  
 
-## Build Summary Table
+#### The column headers now look better:
+```{r echo=FALSE, comment=""}
+colnames(VTT_Bouncerate_Percentexit)
+colnames(VTT_ConversionAOV)
+colnames(VTT_Revenue)
+colnames(VTT_Traffic)
+colnames(VTT_SkuCount)
+```
+
+***
+
+### Build Summary Table
+We now need to combine all these data frames into 1 for analysis
+```{r comment=""}
 SummaryTable_VTT <- VTT_Bouncerate_Percentexit
 SummaryTable_VTT$Conversion <- VTT_ConversionAOV$Conversion
 SummaryTable_VTT$AOV <- VTT_ConversionAOV$AOV
 SummaryTable_VTT$Revenue <- VTT_Revenue$Revenue
 SummaryTable_VTT$Traffic <- VTT_Traffic$Traffic
 SummaryTable_VTT$SkuCount <- VTT_SkuCount$SkuCount
+```  
 
-head(SummaryTable_VTT)
+#### Output of the first five rows of the summary table:
+```{r echo=FALSE, comment=""}
+head(SummaryTable_VTT, 5)
+```  
+
+#### Structure of the summary table:
+```{r echo=FALSE, comment=""}
 str(SummaryTable_VTT)
+```
 
-##Create Visuals##
-#Conversion Boxplot
+***
+***
+
+## Create Visuals
+### Boxplot - Conversion Vs. Year
+```{r comment=""}
 qplot(x = as.factor(Year), y = Conversion, data = SummaryTable_VTT, xlab = "Year",
             geom = 'boxplot') +
        coord_cartesian(ylim = c(.01, .0325))
+```
 
-# Conversion Line Graphs
+#### It is clear that the conversion rate has been decreasing over time. We also see that the inter-quartile range has been decreasing over time. I am not sure what could explain that.
+
+### Line graphs - Rev Vs. SkuCount and Rev Vs. SkuCount by Year
+#### Rev Vs. SkuCount
+```{r comment=""}
 ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
        geom_point() +
        geom_smooth(method = 'lm') +
-       coord_cartesian(xlim = c(100, 200))
+       coord_cartesian(xlim = c(100, 200), ylim = c(10000, 75000))
+```  
 
+##### This shows a slight positive correlation between SkuCount and Revenue
+***
+#### Rev Vs. SkuCount by Year
+```{r comment=""}
 ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
        facet_wrap(~Year) +
        geom_point() +
        geom_smooth(method = 'lm') +
-       coord_cartesian(xlim = c(100,200))
+       coord_cartesian(xlim = c(100,200), ylim = c(20000, 70000))
+```  
 
-# Conversion Vs. Traffic Line Graphs
+##### When this is broken out by year it becomes a less clear picture
+
+### Line graphs - Traffic Vs. Conversion and Traffic Vs. Conversion by Year
+#### Traffic Vs. Conversion
+```{r comment=""}
 ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
        geom_point() +
        geom_smooth(method = 'lm') +
        coord_cartesian()
+```
 
+##### There appears to be a strong negative correlation between the amount of traffic and the conversion rate
+***
+#### Traffic Vs. Conversion by Year
+```{r comment=""}
 ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
+       facet_grid(~Year) +
        geom_point() +
        geom_smooth(method = 'lm') +
        coord_cartesian()
+```
 
-# Traffic Line Graphs
+##### Here you can see that conversion has been declining YOY, but traffic has been increasing (note that in 2010 the line starts on the left of the graph and ends in the middle, whereas in 2015 the line starts in the middle of the graph and ends on the right)  
+##### Breaking it up by year makes it appear that there are other variables affecting the conversion rate
+
+### Line graphs - Traffic Vs. Rev and Traffic Vs. Rev by Year
+#### Traffic Vs. Revenue
+```{r comment=""}
 ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
        geom_point() +
        geom_smooth(method = 'lm') +
        coord_cartesian()
+```
 
+##### There appears to be a positive correlation between traffic and revenue
+***
+#### Traffic Vs. Revenue by Year
+```{r comment=""}
 ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
+       facet_grid(Year~.) +
        geom_point() +
        geom_smooth(method = 'lm') +
        coord_cartesian()
+```
 
-# Seasonality Trend
+##### Breaking it out by year shows that each year there was a positive correlation and that traffic has been increasing
+
+### Seasonality Trend
+#### Let's see if there is any weekly seasonality to the revenue
+```{r comment=""}
 ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
-       geom_line() +
-       coord_cartesian()
-
-ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
-       geom_line() +
-       coord_cartesian()
-
-# Conversion Seasonality
-ggplot(aes(x = Week_Index, y = Conversion), data = SummaryTable_VTT) +
-       facet_wrap(~Year) +
        geom_line() +
        coord_cartesian()
 ```
+
+##### We do see some weekly seasonality. It looks like there is a base revenue somewhere around the 40K mark, with dips around the 20th week of the year and a bump at the end during holiday season. Let's break this out by year to smooth it out:
+
+```{r comment=""}
+ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
+       facet_grid(Year~.) +
+       geom_line(aes(color = Year)) +
+       coord_cartesian()
+```
+
+##### There is definitely some seasonal lift towards the end of the year, correlating to the holiday season. Beyond that it is difficult to see
+
+### Conversion Seasonality
+####I wanted to see if there was any seasonality in the conversion rates
+```{r comment=""}
+ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VTT) +
+       geom_line() +
+       coord_cartesian()
+```
+
+##### There does appear to be some seasonality in the conversion rates showing a definite drop in weeks 30-40 (end of July to mid-September), with a spike right around Black Friday/Cyber Monday and an elevation during the holiday period  
+
+##### Let's see how this looks broken up by year:
+
+```{r comment=""}
+ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VTT) +
+       facet_grid(Year~.) +
+       geom_line() +
+       coord_cartesian()
+```
+
+***
+***
+
+## Build a linear regression model
+### First, split the summary table into a training set and a test set to prevent overfitting, then test it (using the Caret library)
+#### Split the data
+```{r comment=""}
+VTT_TrainIndex <- createDataPartition(SummaryTable_VTT$Revenue, p = .8, list = FALSE)
+VTT_Train <- SummaryTable_VTT[VTT_TrainIndex,]
+VTT_Test <- SummaryTable_VTT[-VTT_TrainIndex,]
+```  
+
+#### Build models and select the best  
+##### Let's take a look at a few models and then select the best
+```{r comment=""}
+summary(lm(Revenue ~ ., data = VTT_Train))
+```  
+
+##### The adjusted $r^{2}$ looks fantastic, but lets remove Year and PercentExit (the 2 least significant):
+
+```{r comment=""}
+summary(lm(Revenue ~ . - Year - SkuCount, data = VTT_Train))
+```  
+
+##### This has an even better adjusted $r^{2}$, but still has some insignificant variables. Let's remove Week_Index:
+
+```{r comment=""}
+summary(lm(Revenue ~ . - Year - SkuCount - Week_Index, data = VTT_Train))
+```  
+
+##### The adjusted $r^{2}$ remains virtually the same and we still have some insignificant variables. Let's remove Bounce_Rate:
+
+```{r comment=""}
+summary(lm(Revenue ~ . - Year - SkuCount - Week_Index - Bounce_Rate, data = VTT_Train))
+```  
+
+##### Once again, the adjusted $r^{2}$ remains virtually unchanged. Let's remove the least significant variable (Percent_Exit) and see what that does:
+
+```{r comment=""}
+summary(lm(Revenue ~ . - Year - SkuCount - Week_Index - Bounce_Rate - Percent_Exit, data = VTT_Train))
+```  
+
+##### Let's run with this one. The adjusted $r^{2}$ is very high and this model only requires three variables. Do note that while the adjusted $r^{2}$ remained virtually unchanged with each successive model, the multiple  $r^{2}$ decreased. This is because we gave the model fewer predictive variables as we progressed  
+Here is the final model, rewritten for simplification:  
+```{r comment=""}
+model <- lm(Revenue ~ Conversion + AOV + Traffic, data = VTT_Train)
+```
+```{r echo=FALSE, comment=""}
+summary(model)
+```  
+
+#### Create test output
+##### We now need to test the training set against the test set we created earlier to see if this model fits to 'new' data. If the resulting adjusted $r^{2}$ is still high then we have a good model
+```{r comment=""}
+predictTest <- predict(model, newdata = VTT_Test)
+```  
+
+#### Calc $r^{2}$ for test set
+```{r comment=""}
+SSE <- sum((VTT_Test$Revenue - predictTest)^2)
+SST <- sum((VTT_Test$Revenue - mean(SummaryTable_VTT$Revenue))^2)
+1 - SSE/SST
+```  
+##### The adjusted $r^{2}$ is quite high so we will accept this as a terrific model to predict revenue
+***
