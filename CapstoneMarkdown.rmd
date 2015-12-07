@@ -234,42 +234,50 @@ ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VT
 ### First, split the summary table into a training set and a test set to prevent overfitting, then test it (using the Caret library)
 #### Split the data
 ```{r comment=""}
+set.seed(55)
 VTT_TrainIndex <- createDataPartition(SummaryTable_VTT$Revenue, p = .8, list = FALSE)
 VTT_Train <- SummaryTable_VTT[VTT_TrainIndex,]
 VTT_Test <- SummaryTable_VTT[-VTT_TrainIndex,]
 ```  
 
 #### Build models and select the best  
-##### Let's take a look at a few models and then select the best
+##### Let's take a look at a few models and then select the best. The goal is to end up with a predictive model that is as simple as possible (i.e. fewest number of variables required)
 ```{r comment=""}
 summary(lm(Revenue ~ ., data = VTT_Train))
 ```  
 
-##### The adjusted $r^{2}$ looks fantastic, but lets remove Year and PercentExit (the 2 least significant):
+##### The adjusted $r^{2}$ looks fantastic, but lets remove Percent_Exit (the least significant variable):
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Year - SkuCount, data = VTT_Train))
+summary(lm(Revenue ~ . - Percent_Exit, data = VTT_Train))
 ```  
 
-##### This has an even better adjusted $r^{2}$, but still has some insignificant variables. Let's remove Week_Index:
+##### The $r^{2}$ is essentially the same and there are still some insignificant variables. Let's remove Year (the next least significant variable):
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Year - SkuCount - Week_Index, data = VTT_Train))
+summary(lm(Revenue ~ . - Percent_Exit - Year, data = VTT_Train))
 ```  
 
-##### The adjusted $r^{2}$ remains virtually the same and we still have some insignificant variables. Let's remove Bounce_Rate:
+##### The adjusted $r^{2}$ remains virtually the same and all the variables are significant. Let's keep removing the least significant variables one by one and re-evaluating the $r^{2}$ as we go.  The below model has the Week_Index removed:
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Year - SkuCount - Week_Index - Bounce_Rate, data = VTT_Train))
+summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index, data = VTT_Train))
 ```  
 
-##### Once again, the adjusted $r^{2}$ remains virtually unchanged. Let's remove the least significant variable (Percent_Exit) and see what that does:
+##### The adjusted $r^{2}$ is still very high. Let's remove Bounce_Rate and keep going:
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Year - SkuCount - Week_Index - Bounce_Rate - Percent_Exit, data = VTT_Train))
+summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index - Bounce_Rate, data = VTT_Train))
 ```  
 
-##### Let's run with this one. The adjusted $r^{2}$ is very high and this model only requires three variables. Do note that while the adjusted $r^{2}$ remained virtually unchanged with each successive model, the multiple  $r^{2}$ decreased. This is because we gave the model fewer predictive variables as we progressed  
+##### Still a great model, let's remove SkuCount:  
+
+```{r comment=""}
+summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index - Bounce_Rate - SkuCount, data = VTT_Train))
+```  
+
+##### Let's run with this one. The adjusted $r^{2}$ is very high and this model only requires three variables.   
+
 Here is the final model, rewritten for simplification:  
 ```{r comment=""}
 model <- lm(Revenue ~ Conversion + AOV + Traffic, data = VTT_Train)
@@ -279,7 +287,7 @@ summary(model)
 ```  
 
 #### Create test output
-##### We now need to test the training set against the test set we created earlier to see if this model fits to 'new' data. If the resulting adjusted $r^{2}$ is still high then we have a good model
+##### We now need to test the model we built on the test set we created earlier to see if this model fits to 'new' data. If the resulting adjusted $r^{2}$ is still high then we have a good model
 ```{r comment=""}
 predictTest <- predict(model, newdata = VTT_Test)
 ```  
@@ -290,5 +298,5 @@ SSE <- sum((VTT_Test$Revenue - predictTest)^2)
 SST <- sum((VTT_Test$Revenue - mean(SummaryTable_VTT$Revenue))^2)
 1 - SSE/SST
 ```  
-##### The adjusted $r^{2}$ is quite high so we will accept this as a terrific model to predict revenue
+##### The adjusted $r^{2}$ is still high (though lower than for the training set) so we will accept this as a terrific model to predict revenue
 ***
