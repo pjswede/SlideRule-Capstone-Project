@@ -20,11 +20,12 @@ Let's get started...
 ```{r comment=""}
 library(caret)
 library(ggplot2)
+library(pander)
 ```
 
 ## Load in the data and assign to data frames
-The first four data sources came from Google Analytics and were exported to Excel, then saved as a .csv  
-The SkuCount data was retrieved from my company's data warehouse, formatted, and saved as a .csv
+The first four data sources came from Google Analytics and were exported to Excel, then saved as a .csv file 
+The SkuCount data was retrieved from an e-commerce company's data warehouse, formatted, and saved as a .csv file  
 ```{r comment=""}
 VTT_Bouncerate_Percentexit <- read.csv("VTT_BouncerateVsPercentexit.csv")
 VTT_ConversionAOV <- read.csv("VTT_ConversionVsAOV.csv")
@@ -42,7 +43,8 @@ colnames(VTT_Traffic)
 colnames(VTT_SkuCount)
 ```  
 
-## Change the headers for these tables and convert necessary variables to numeric  
+## Change the headers for these tables and convert necessary variables to the numeric data type.
+We need to change some variables to numeric because R reads anything with a period in it as a character data type, which can't be interpreted for the linear regression we will be doing
 
 
 #### Change the headers for the bounceRate_percentExit table and convert Bounce Rate and Percent Exit to numeric
@@ -89,7 +91,7 @@ colnames(VTT_SkuCount)
 ***
 
 ### Build Summary Table
-We now need to combine all these data frames into 1 for analysis
+We now need to combine all these data frames into one for analysis
 ```{r comment=""}
 SummaryTable_VTT <- VTT_Bouncerate_Percentexit
 SummaryTable_VTT$Conversion <- VTT_ConversionAOV$Conversion
@@ -131,7 +133,7 @@ ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian(xlim = c(100, 200), ylim = c(10000, 75000))
 ```  
 
-##### This shows a slight positive correlation between SkuCount and Revenue
+#### This shows a slight positive correlation between SkuCount and Revenue
 ***
 #### Rev Vs. SkuCount by Year
 ```{r comment=""}
@@ -142,7 +144,7 @@ ggplot(aes(x = SkuCount, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian(xlim = c(100,200), ylim = c(20000, 70000))
 ```  
 
-##### When this is broken out by year it becomes a less clear picture
+#### When this is broken out by year it becomes a less clear picture. This suggests that Sku count has little effect on revenue
 
 ### Line graphs - Traffic Vs. Conversion and Traffic Vs. Conversion by Year
 #### Traffic Vs. Conversion
@@ -153,7 +155,7 @@ ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
        coord_cartesian()
 ```
 
-##### There appears to be a strong negative correlation between the amount of traffic and the conversion rate
+#### There appears to be a strong negative correlation between the amount of traffic and the conversion rate. This suggests that the additional traffic coming in is of low quality (i.e., a demographic that is less likely to make a purchase). If the losses in conversion are not low enough to offset the increase in traffic then the additional traffic provides no net-positive value
 ***
 #### Traffic Vs. Conversion by Year
 ```{r comment=""}
@@ -164,7 +166,7 @@ ggplot(aes(x = Traffic, y = Conversion), data = SummaryTable_VTT) +
        coord_cartesian()
 ```
 
-##### Here you can see that conversion has been declining YOY, but traffic has been increasing (note that in 2010 the line starts on the left of the graph and ends in the middle, whereas in 2015 the line starts in the middle of the graph and ends on the right)  
+#### Here you can see that conversion has been declining YOY, but traffic has been increasing (note that in 2010 the line starts on the left of the graph and ends in the middle, whereas in 2015 the line starts in the middle of the graph and ends on the right)  
 ##### Breaking it up by year makes it appear that there are other variables affecting the conversion rate
 
 ### Line graphs - Traffic Vs. Rev and Traffic Vs. Rev by Year
@@ -176,7 +178,7 @@ ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian()
 ```
 
-##### There appears to be a positive correlation between traffic and revenue
+#### There appears to be a positive correlation between traffic and revenue
 ***
 #### Traffic Vs. Revenue by Year
 ```{r comment=""}
@@ -187,7 +189,7 @@ ggplot(aes(x = Traffic, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian()
 ```
 
-##### Breaking it out by year shows that each year there was a positive correlation and that traffic has been increasing
+#### Breaking it out by year shows that each year there was a positive correlation and that traffic has been increasing. It's clear at this point that additional traffic increases revenue, but other factors (such as conversion) must remain the same if revenue is going to increase
 
 ### Seasonality Trend
 #### Let's see if there is any weekly seasonality to the revenue
@@ -197,7 +199,7 @@ ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian()
 ```
 
-##### We do see some weekly seasonality. It looks like there is a base revenue somewhere around the 40K mark, with dips around the 20th week of the year and a bump at the end during holiday season. Let's break this out by year to smooth it out:
+#### We do see some weekly seasonality. It looks like there is a base revenue somewhere around the 40K mark, with dips around the 20th week of the year and a bump at the end during holiday season. Let's break this out by year to smooth it out:
 
 ```{r comment=""}
 ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
@@ -206,7 +208,7 @@ ggplot(aes(x = Week_Index, y = Revenue), data = SummaryTable_VTT) +
        coord_cartesian()
 ```
 
-##### There is definitely some seasonal lift towards the end of the year, correlating to the holiday season. Beyond that it is difficult to see
+#### There is definitely some seasonal lift towards the end of the year, correlating to the holiday season. Beyond that it is difficult to see
 
 ### Conversion Seasonality
 ####I wanted to see if there was any seasonality in the conversion rates
@@ -216,7 +218,7 @@ ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VT
        coord_cartesian()
 ```
 
-##### There does appear to be some seasonality in the conversion rates showing a definite drop in weeks 30-40 (end of July to mid-September), with a spike right around Black Friday/Cyber Monday and an elevation during the holiday period  
+#### There does appear to be some seasonality in the conversion rates showing a definite drop in weeks 30-40 (end of July to mid-September), with a spike right around Black Friday/Cyber Monday and an elevation during the holiday period  
 
 ##### Let's see how this looks broken up by year:
 
@@ -231,7 +233,7 @@ ggplot(aes(x = Week_Index, y = Conversion, color = Year), data = SummaryTable_VT
 ***
 
 ## Build a linear regression model
-### First, split the summary table into a training set and a test set to prevent overfitting, then test it (using the Caret library)
+### We will first split the summary table into a training set and a test set to prevent overfitting and then test it (using the Caret library)
 #### Split the data
 ```{r comment=""}
 set.seed(55)
@@ -241,49 +243,54 @@ VTT_Test <- SummaryTable_VTT[-VTT_TrainIndex,]
 ```  
 
 #### Build models and select the best  
-##### Let's take a look at a few models and then select the best. The goal is to end up with a predictive model that is as simple as possible (i.e. fewest number of variables required)
-```{r comment=""}
-summary(lm(Revenue ~ ., data = VTT_Train))
-```  
+##### Let's take a look at a few models and then select the best. The goal is to end up with a predictive model that is also simple (i.e., fewest number of variables possible). With this in mind, our approach will be to build our first model using ALL the variables as predictors and then removing the least 'significant' variable' and building a new model until we get down to something that is both satisfactorily predictive and simple. We will be measuring the predictive power of the model with the adjusted $r^{2}$ measure. In general, anything above .7 is very good.  
 
-##### The adjusted $r^{2}$ looks fantastic, but lets remove Percent_Exit (the least significant variable):
+##### Note: The significance of a variable is denoted by the p-value (notated as Pr(>|t|) below). The smaller the p-value, the more significant the variable.  
 
-```{r comment=""}
-summary(lm(Revenue ~ . - Percent_Exit, data = VTT_Train))
-```  
-
-##### The $r^{2}$ is essentially the same and there are still some insignificant variables. Let's remove Year (the next least significant variable):
+##### Let's take a look at our first model using all the variables in the data set to predict revenue:
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Percent_Exit - Year, data = VTT_Train))
+pander(summary(lm(Revenue ~ ., data = VTT_Train)))
 ```  
 
-##### The adjusted $r^{2}$ remains virtually the same and all the variables are significant. Let's keep removing the least significant variables one by one and re-evaluating the $r^{2}$ as we go.  The below model has the Week_Index removed:
+##### <span style = "color:blue">The adjusted $r^{2}$ looks fantastic, but lets remove Percent_Exit (the least significant variable):</span>
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index, data = VTT_Train))
+pander(summary(lm(Revenue ~ . - Percent_Exit, data = VTT_Train)))
 ```  
 
-##### The adjusted $r^{2}$ is still very high. Let's remove Bounce_Rate and keep going:
+##### <span style = "color:blue">The $r^{2}$ is essentially the same and there are still some insignificant variables. Let's remove Year (the next least significant variable):</span>
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index - Bounce_Rate, data = VTT_Train))
+pander(summary(lm(Revenue ~ . - Percent_Exit - Year, data = VTT_Train)))
 ```  
 
-##### Still a great model, let's remove SkuCount:  
+##### <span style = "color:blue">The adjusted $r^{2}$ remains virtually the same and all the variables are significant. Let's keep removing the least significant variables one by one and re-evaluating the $r^{2}$ as we go.  The below model has the Week_Index removed:</span>
 
 ```{r comment=""}
-summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index - Bounce_Rate - SkuCount, data = VTT_Train))
+pander(summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index, data = VTT_Train)))
 ```  
 
-##### Let's run with this one. The adjusted $r^{2}$ is very high and this model only requires three variables.   
+##### <span style = "color:blue">The adjusted $r^{2}$ is still very high. Let's remove Bounce_Rate and keep going:</span>
+
+```{r comment=""}
+pander(summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index - Bounce_Rate, data = VTT_Train)))
+```  
+
+##### <span style = "color:blue">Still a great model, let's remove SkuCount:</span> 
+
+```{r comment=""}
+pander(summary(lm(Revenue ~ . - Percent_Exit - Year - Week_Index - Bounce_Rate - SkuCount, data = VTT_Train)))
+```  
+
+##### <span style = "color:blue">Let's run with this one. The adjusted $r^{2}$ is very high and this model only requires three variables.</span>   
 
 Here is the final model, rewritten for simplification:  
 ```{r comment=""}
 model <- lm(Revenue ~ Conversion + AOV + Traffic, data = VTT_Train)
 ```
 ```{r echo=FALSE, comment=""}
-summary(model)
+pander(summary(model))
 ```  
 
 #### Create test output
